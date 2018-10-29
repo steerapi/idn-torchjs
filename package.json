@@ -1,0 +1,17 @@
+{
+  "name": "torchjs",
+  "version": "1.0.0",
+  "description": "Native module calculating estimate of PI",
+  "dependencies": {
+    "bindings": "^1.3.0",
+    "cmake-js": "^4.0.1",
+    "nan": "^2.11.1"
+  },
+  "scripts": {
+    "test": "mocha ./tests",
+    "install": "cmake-js compile"
+  },
+  "devDependencies": {
+    "mocha": "*"
+  }
+}
