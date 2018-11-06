@@ -5,18 +5,24 @@ project (torchjs)
 
 find_package(CUDA)
 if(CUDA_FOUND)
-  file(DOWNLOAD https://download.pytorch.org/libtorch/nightly/cu${CUDA_VERSION_MAJOR}${CUDA_VERSION_MINOR}/libtorch-shared-with-deps-latest.zip ${CMAKE_CURRENT_SOURCE_DIR}/libtorch.zip)
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/libtorch-cu${CUDA_VERSION_MAJOR}${CUDA_VERSION_MINOR}.zip")
+file(DOWNLOAD https://download.pytorch.org/libtorch/nightly/cu${CUDA_VERSION_MAJOR}${CUDA_VERSION_MINOR}/libtorch-shared-with-deps-latest.zip ${CMAKE_CURRENT_SOURCE_DIR}/libtorch-cu${CUDA_VERSION_MAJOR}${CUDA_VERSION_MINOR}.zip)
+endif()
+execute_process(
+  COMMAND unzip -o ${CMAKE_CURRENT_SOURCE_DIR}/libtorch-cu${CUDA_VERSION_MAJOR}${CUDA_VERSION_MINOR}.zip
+)
 else()
-  file(DOWNLOAD https://download.pytorch.org/libtorch/nightly/cpu/libtorch-shared-with-deps-latest.zip ${CMAKE_CURRENT_SOURCE_DIR}/libtorch.zip)
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/libtorch-cpu.zip")
+file(DOWNLOAD https://download.pytorch.org/libtorch/nightly/cpu/libtorch-shared-with-deps-latest.zip ${CMAKE_CURRENT_SOURCE_DIR}/libtorch-cpu.zip)
+endif()
+execute_process(
+  COMMAND unzip -o ${CMAKE_CURRENT_SOURCE_DIR}/libtorch-cpu.zip
+)
 endif(CUDA_FOUND)
 
-execute_process(
-  COMMAND unzip ${CMAKE_CURRENT_SOURCE_DIR}/libtorch.zip
-)
-
-execute_process(
-  COMMAND rm ${CMAKE_CURRENT_SOURCE_DIR}/libtorch.zip
-)
+# execute_process(
+#   COMMAND rm ${CMAKE_CURRENT_SOURCE_DIR}/libtorch-cpu.zip
+# )
 
 set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_BINARY_DIR}/libtorch/)
 

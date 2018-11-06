@@ -78,3 +78,4 @@ typings/
 build
 core
 _libtorch
+*.zip

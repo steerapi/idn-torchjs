@@ -25,6 +25,9 @@ NAN_MODULE_INIT(Tensor::Init)
   Nan::SetAccessor(ctor->InstanceTemplate(),
                    Nan::New("sizes").ToLocalChecked(), Tensor::HandleGetters,
                    Tensor::HandleSetters);
+  Nan::SetAccessor(ctor->InstanceTemplate(),
+                   Nan::New("type").ToLocalChecked(), Tensor::HandleGetters,
+                   Tensor::HandleSetters);
   // Nan::SetAccessor(ctor->InstanceTemplate(), Nan::New("y").ToLocalChecked(),
   // Tensor::HandleGetters, Tensor::HandleSetters);
   // Nan::SetAccessor(ctor->InstanceTemplate(), Nan::New("z").ToLocalChecked(),
@@ -190,6 +193,11 @@ NAN_GETTER(Tensor::HandleGetters)
       Nan::Set(array, i, Nan::New(size));
     }
     info.GetReturnValue().Set(array);
+  }
+  else if (propertyName == "type")
+  {
+    v8::Local<v8::String> type = Nan::New<v8::String>(self->mTensor.type().toString()).ToLocalChecked();
+    info.GetReturnValue().Set(type);
   }
   else
   {
