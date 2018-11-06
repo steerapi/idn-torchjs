@@ -1,5 +1,9 @@
 # torchjs
 
+Requirements:
+
+    sudo apt install g++ cmake unzip
+
 Currently only support linux x86_64.
 
     npm install @idn/torchjs
