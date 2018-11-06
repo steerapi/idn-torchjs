@@ -1,7 +1,7 @@
 {
-  "name": "torchjs",
-  "version": "1.0.0",
-  "description": "Native module calculating estimate of PI",
+  "name": "@idn/torchjs",
+  "version": "1.0.4",
+  "description": "Running PyTorch models in NodeJS with libtorch",
   "dependencies": {
     "bindings": "^1.3.0",
     "cmake-js": "^4.0.1",
@@ -13,5 +13,24 @@
   },
   "devDependencies": {
     "mocha": "*"
-  }
+  },
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/steerapi/idn-torchjs.git"
+  },
+  "author": "Surat Teerapittayanon",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/steerapi/idn-torchjs/issues"
+  },
+  "homepage": "https://github.com/steerapi/idn-torchjs#readme",
+  "keywords": [
+    "torch",
+    "pytorch",
+    "libtorch"
+  ]
 }

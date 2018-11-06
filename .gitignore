@@ -77,4 +77,4 @@ typings/
 
 build
 core
-libtorch
+_libtorch

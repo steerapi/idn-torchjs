@@ -1,0 +1,8 @@
+.vscode
+build
+node_modules
+.editorconfig
+.gitignore
+.prettierrc
+.git
+_libtorch

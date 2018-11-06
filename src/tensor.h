@@ -1,7 +1,9 @@
 #ifndef TENSOR_H
 #define TENSOR_H
+
 #include <nan.h>
 #include <torch/torch.h>
+
 namespace torchjs
 {
 class Tensor : public Nan::ObjectWrap
@@ -26,7 +28,9 @@ private:
 private:
   torch::Tensor mTensor;
 };
+
 NAN_METHOD(ones);
 NAN_METHOD(zeros);
+
 } // namespace torchjs
 #endif

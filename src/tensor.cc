@@ -12,15 +12,23 @@ Tensor::~Tensor(){};
 
 NAN_MODULE_INIT(Tensor::Init)
 {
-  v8::Local<v8::FunctionTemplate> ctor = Nan::New<v8::FunctionTemplate>(Tensor::New);
+  v8::Local<v8::FunctionTemplate> ctor =
+      Nan::New<v8::FunctionTemplate>(Tensor::New);
   Tensor::constructor.Reset(ctor);
   ctor->InstanceTemplate()->SetInternalFieldCount(1);
   ctor->SetClassName(Nan::New("Tensor").ToLocalChecked());
 
   // link our getters and setter to the object property
-  Nan::SetAccessor(ctor->InstanceTemplate(), Nan::New("tensor").ToLocalChecked(), Tensor::HandleGetters, Tensor::HandleSetters);
-  // Nan::SetAccessor(ctor->InstanceTemplate(), Nan::New("y").ToLocalChecked(), Tensor::HandleGetters, Tensor::HandleSetters);
-  // Nan::SetAccessor(ctor->InstanceTemplate(), Nan::New("z").ToLocalChecked(), Tensor::HandleGetters, Tensor::HandleSetters);
+  Nan::SetAccessor(ctor->InstanceTemplate(),
+                   Nan::New("data").ToLocalChecked(), Tensor::HandleGetters,
+                   Tensor::HandleSetters);
+  Nan::SetAccessor(ctor->InstanceTemplate(),
+                   Nan::New("sizes").ToLocalChecked(), Tensor::HandleGetters,
+                   Tensor::HandleSetters);
+  // Nan::SetAccessor(ctor->InstanceTemplate(), Nan::New("y").ToLocalChecked(),
+  // Tensor::HandleGetters, Tensor::HandleSetters);
+  // Nan::SetAccessor(ctor->InstanceTemplate(), Nan::New("z").ToLocalChecked(),
+  // Tensor::HandleGetters, Tensor::HandleSetters);
 
   // Nan::SetPrototypeMethod(tpl, "setTensor", setTensor);
   // Nan::SetPrototypeMethod(tpl, "getTensor", getTensor);
@@ -28,18 +36,13 @@ NAN_MODULE_INIT(Tensor::Init)
   target->Set(Nan::New("Tensor").ToLocalChecked(), ctor->GetFunction());
 }
 
-void Tensor::setTensor(at::Tensor tensor)
-{
-  this->mTensor = tensor;
-}
-torch::Tensor Tensor::getTensor()
-{
-  return this->mTensor;
-}
+void Tensor::setTensor(at::Tensor tensor) { this->mTensor = tensor; }
+torch::Tensor Tensor::getTensor() { return this->mTensor; }
 
 v8::Local<v8::Object> Tensor::NewInstance()
 {
-  v8::Local<v8::Function> constructorFunc = Nan::New(Tensor::constructor)->GetFunction();
+  v8::Local<v8::Function> constructorFunc =
+      Nan::New(Tensor::constructor)->GetFunction();
   const int argc = 0;
   v8::Local<v8::Value> argv[] = {};
   return Nan::NewInstance(constructorFunc, argc, argv).ToLocalChecked();
@@ -60,7 +63,8 @@ NAN_METHOD(Tensor::New)
 {
   if (!info.IsConstructCall())
   {
-    return Nan::ThrowError(Nan::New("Tensor::New - called without new keyword").ToLocalChecked());
+    return Nan::ThrowError(
+        Nan::New("Tensor::New - called without new keyword").ToLocalChecked());
   }
 
   Tensor *obj = new Tensor();
@@ -72,7 +76,8 @@ NAN_METHOD(ones)
 {
   // Sanity checking of the arguments
   if (info.Length() < 2)
-    return Nan::ThrowError(Nan::New("Wrong number of arguments").ToLocalChecked());
+    return Nan::ThrowError(
+        Nan::New("Wrong number of arguments").ToLocalChecked());
   if (!info[0]->IsArray() || !info[1]->IsBoolean())
     return Nan::ThrowError(Nan::New("Wrong argument types").ToLocalChecked());
   // Retrieving parameters (require_grad and tensor shape)
@@ -100,7 +105,8 @@ NAN_METHOD(zeros)
 {
   // Sanity checking of the arguments
   if (info.Length() < 2)
-    return Nan::ThrowError(Nan::New("Wrong number of arguments").ToLocalChecked());
+    return Nan::ThrowError(
+        Nan::New("Wrong number of arguments").ToLocalChecked());
   if (!info[0]->IsArray() || !info[1]->IsBoolean())
     return Nan::ThrowError(Nan::New("Wrong argument types").ToLocalChecked());
   // Retrieving parameters (require_grad and tensor shape)
@@ -142,7 +148,8 @@ template <typename T>
 v8::Local<T> createTypedArray(size_t size)
 {
   size_t byteLength = size * sizeof(typename V8TypedArrayTraits<T>::value_type);
-  v8::Local<v8::ArrayBuffer> buffer = v8::ArrayBuffer::New(v8::Isolate::GetCurrent(), byteLength);
+  v8::Local<v8::ArrayBuffer> buffer =
+      v8::ArrayBuffer::New(v8::Isolate::GetCurrent(), byteLength);
   v8::Local<T> result = T::New(buffer, 0, size);
   return result;
 };
@@ -152,24 +159,36 @@ NAN_GETTER(Tensor::HandleGetters)
   Tensor *self = Nan::ObjectWrap::Unwrap<Tensor>(info.This());
 
   std::string propertyName = std::string(*Nan::Utf8String(property));
-  if (propertyName == "tensor")
+  if (propertyName == "data")
   {
     uint64_t numel = self->mTensor.numel();
-    v8::Local<v8::Float32Array> array = createTypedArray<v8::Float32Array>(numel);
+    v8::Local<v8::Float32Array> array =
+        createTypedArray<v8::Float32Array>(numel);
 
     Nan::TypedArrayContents<float> typedArrayContents(array);
     float *dst = *typedArrayContents;
 
     torch::Tensor x = self->mTensor.contiguous();
     auto x_p = x.data<float>();
-    int64_t size = x.numel();
+    numel = x.numel();
 
-    // cout << "size" << size << endl;
-    for (size_t i = 0; i < size; i++)
+    for (size_t i = 0; i < numel; i++)
     {
       dst[i] = x_p[i];
     }
 
+    info.GetReturnValue().Set(array);
+  }
+  else if (propertyName == "sizes")
+  {
+    uint8_t dim = self->mTensor.dim();
+    at::IntList sizes = self->mTensor.sizes();
+    v8::Local<v8::Array> array = Nan::New<v8::Array>(dim);
+    for (size_t i = 0; i < dim; i++)
+    {
+      uint32_t size = sizes[i];
+      Nan::Set(array, i, Nan::New(size));
+    }
     info.GetReturnValue().Set(array);
   }
   else
@@ -181,25 +200,27 @@ NAN_GETTER(Tensor::HandleGetters)
 NAN_SETTER(Tensor::HandleSetters)
 {
   Tensor *self = Nan::ObjectWrap::Unwrap<Tensor>(info.This());
-
-  if (!value->IsTypedArray())
+  std::string propertyName = std::string(*Nan::Utf8String(property));
+  if (propertyName == "data")
   {
-    return Nan::ThrowError(Nan::New("expected value to be a TypedArray").ToLocalChecked());
-  }
+    if (!value->IsTypedArray())
+    {
+      return Nan::ThrowError(
+          Nan::New("expected value to be a TypedArray").ToLocalChecked());
+    }
 
-  v8::Local<v8::Float32Array> array = value.As<v8::Float32Array>();
-  Nan::TypedArrayContents<float> typedArrayContents(array);
-  float *dst = *typedArrayContents;
-  // printf("numel %d", self->mTensor.numel());
+    v8::Local<v8::Float32Array> array = value.As<v8::Float32Array>();
+    Nan::TypedArrayContents<float> typedArrayContents(array);
+    float *dst = *typedArrayContents;
 
-  torch::Tensor x = self->mTensor.contiguous();
-  auto x_p = x.data<float>();
-  int64_t size = x.numel();
+    torch::Tensor x = self->mTensor.contiguous();
+    auto x_p = x.data<float>();
+    uint64_t numel = x.numel();
 
-  // cout << "size" << size << endl;
-  for (size_t i = 0; i < size; i++)
-  {
-    x_p[i] = dst[i];
+    for (size_t i = 0; i < numel; i++)
+    {
+      x_p[i] = dst[i];
+    }
   }
 }
 

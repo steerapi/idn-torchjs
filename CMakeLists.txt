@@ -3,9 +3,25 @@ cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 # Name of the project (will be the name of the plugin)
 project (torchjs)
 
-# set(CMAKE_PREFIX_PATH ./libtorch/arm64v8;./libtorch/x86_64)
+find_package(CUDA)
+if(CUDA_FOUND)
+  file(DOWNLOAD https://download.pytorch.org/libtorch/nightly/cu${CUDA_VERSION_MAJOR}${CUDA_VERSION_MINOR}/libtorch-shared-with-deps-latest.zip ${CMAKE_CURRENT_SOURCE_DIR}/libtorch.zip)
+else()
+  file(DOWNLOAD https://download.pytorch.org/libtorch/nightly/cpu/libtorch-shared-with-deps-latest.zip ${CMAKE_CURRENT_SOURCE_DIR}/libtorch.zip)
+endif(CUDA_FOUND)
+
+execute_process(
+  COMMAND unzip ${CMAKE_CURRENT_SOURCE_DIR}/libtorch.zip
+)
+
+execute_process(
+  COMMAND rm ${CMAKE_CURRENT_SOURCE_DIR}/libtorch.zip
+)
+
+set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_BINARY_DIR}/libtorch/)
 
 find_package(Torch REQUIRED)
+
 # Essential include files to build a node addon,
 # you should add this line in every CMake.js based project.
 include_directories(${CMAKE_JS_INC})

@@ -6,9 +6,9 @@
  * MIT License <https://github.com/nodejs/nan/blob/master/LICENSE.md>
  ********************************************************************/
 
-#include <nan.h>
-#include "tensor.h" // NOLINT(build/include)
 #include "module.h" // NOLINT(build/include)
+#include "tensor.h" // NOLINT(build/include)
+#include <nan.h>
 
 using Nan::GetFunction;
 using Nan::New;
