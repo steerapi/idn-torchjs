@@ -23,6 +23,7 @@ NAN_MODULE_INIT(ScriptModule::Init)
 
   Nan::SetPrototypeMethod(tpl, "New", New);
   Nan::SetPrototypeMethod(tpl, "forward", forward);
+  Nan::SetPrototypeMethod(tpl, "is_cuda_available", is_cuda_available);
   Nan::SetPrototypeMethod(tpl, "cuda", cuda);
   Nan::SetPrototypeMethod(tpl, "cpu", cpu);
 
@@ -63,30 +64,61 @@ NAN_METHOD(ScriptModule::forward)
   {
     torch_tensor = torch_tensor.cuda();
   }
-  torch::Tensor output =
-      script_module->mModule->forward({torch_tensor}).toTensor();
-  if (script_module->is_cuda)
-  {
-    output = output.cpu();
-  }
-  auto newinst = Tensor::NewInstance();
-  Tensor *obj = Nan::ObjectWrap::Unwrap<Tensor>(newinst);
-  obj->setTensor(output);
-  info.GetReturnValue().Set(newinst);
+  auto result =
+      script_module->mModule.forward({torch_tensor});
+  if(result.isTuple()){
+    auto tuple = result.toTuple();
+    v8::Local<v8::Array> arr = Nan::New<v8::Array>(tuple->elements().size());
+    for (size_t i = 0; i < tuple->elements().size(); i++)
+    {
+      torch::Tensor o1 = tuple->elements()[i].toTensor();
+      if (script_module->is_cuda)
+      {
+        o1 = o1.cpu();
+      }
+      auto newinst = Tensor::NewInstance();
+      Tensor *obj = Nan::ObjectWrap::Unwrap<Tensor>(newinst);
+      obj->setTensor(o1);
+      Nan::Set(arr, i, newinst);
+    }
+    info.GetReturnValue().Set(arr);
+  }else{
+    torch::Tensor output = result.toTensor();
+    if (script_module->is_cuda)
+    {
+      output = output.cpu();
+    }
+    auto newtensorinst = Tensor::NewInstance();
+    Tensor *obj = Nan::ObjectWrap::Unwrap<Tensor>(newtensorinst);
+    obj->setTensor(output);
+    info.GetReturnValue().Set(newtensorinst);
+  }  
 }
 
 NAN_METHOD(ScriptModule::cuda)
 {
   ScriptModule *script_module = ObjectWrap::Unwrap<ScriptModule>(info.Holder());
-  script_module->is_cuda = true;
-  script_module->mModule->to(at::kCUDA);
+  if(torch::cuda::is_available()){
+    script_module->is_cuda = true;
+    script_module->mModule.to(at::kCUDA);
+  }
+}
+
+NAN_METHOD(ScriptModule::is_cuda_available)
+{
+  ScriptModule *script_module = ObjectWrap::Unwrap<ScriptModule>(info.Holder());
+  if(torch::cuda::is_available()){
+    info.GetReturnValue().Set(true);
+  }else{
+    info.GetReturnValue().Set(false);
+  }
 }
 
 NAN_METHOD(ScriptModule::cpu)
 {
   ScriptModule *script_module = ObjectWrap::Unwrap<ScriptModule>(info.Holder());
   script_module->is_cuda = false;
-  script_module->mModule->to(at::kCPU);
+  script_module->mModule.to(at::kCPU);
 }
 
 } // namespace torchjs

@@ -79,3 +79,4 @@ build
 core
 _libtorch
 *.zip
+*.pt

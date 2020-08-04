@@ -14,6 +14,7 @@ describe('torchjs', function() {
     assert.deepEqual(tensor.data, new Float32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
   });
   it('should run the model on cpu', function() {
+    this.timeout(10000);
     var script_module = new torchjs.ScriptModule(path.join(__dirname, 'lenet.pt'));
     var tensor = torchjs.ones([1, 1, 28, 28], false);
 
@@ -25,12 +26,18 @@ describe('torchjs', function() {
     end = performance.now();
     console.log(`      cpu: ${end - start} ms`);
   });
-  it('should run the model on gpu', function() {
+  it('should check if cuda is available', function() {
     var script_module = new torchjs.ScriptModule(path.join(__dirname, 'lenet.pt'));
-    var tensor = torchjs.ones([1, 1, 28, 28], false);
-
+    const isAvailable = script_module.is_cuda_available();
+  });
+  it('should run the model on gpu or skip if cuda is not available', function() {
+    this.timeout(10000);
+    var script_module = new torchjs.ScriptModule(path.join(__dirname, 'lenet.pt'));
+    if(!script_module.is_cuda_available()){
+      return;
+    }
+    var tensor = torchjs.ones([1, 1, 28, 28], false);    
     const { performance } = require('perf_hooks');
-
     script_module.cuda();
     let start, end;
     start = performance.now();

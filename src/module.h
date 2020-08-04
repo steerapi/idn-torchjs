@@ -18,6 +18,7 @@ private:
   ~ScriptModule();
   static NAN_METHOD(New);
   static NAN_METHOD(forward);
+  static NAN_METHOD(is_cuda_available);
   static NAN_METHOD(cuda);
   static NAN_METHOD(cpu);
   static inline Nan::Persistent<v8::Function> &constructor()
@@ -27,7 +28,7 @@ private:
   }
 
 private:
-  std::shared_ptr<torch::jit::script::Module> mModule;
+  torch::jit::Module mModule;
   bool is_cuda;
 };
 } // namespace torchjs
